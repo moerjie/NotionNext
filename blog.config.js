@@ -12,6 +12,8 @@ const BLOG = {
   APPEARANCE: process.env.NEXT_PUBLIC_APPEARANCE || 'light', // ['light', 'dark', 'auto'], // light 日间模式 ， dark夜间模式， auto根据时间和主题自动夜间模式
   APPEARANCE_DARK_TIME: process.env.NEXT_PUBLIC_APPEARANCE_DARK_TIME || [18, 6], // 夜间模式起至时间，false时关闭根据时间自动切换夜间模式
 
+  IS_TAG_COLOR_DISTINGUISHED: process.env.NEXT_PUBLIC_IS_TAG_COLOR_DISTINGUISHED === 'true' || true, // 对于名称相同的tag是否区分tag的颜色
+
   // 3.14.1版本后，欢迎语在此配置，英文逗号隔开 ,  即可支持多个欢迎语打字效果。
   GREETING_WORDS:
     process.env.NEXT_PUBLIC_GREETING_WORDS || 'Hello World,这里是Moerjie的博客',
@@ -49,8 +51,9 @@ const BLOG = {
   // 默认下会将你上传到 notion的主页封面图和头像也给替换，建议将主页封面图和头像放在其他图床，在 notion 里配置 link 即可。
 
   // START ************网站字体*****************
-
-  FONT_STYLE: process.env.NEXT_PUBLIC_FONT_STYLE || 'font-sans', // ['font-serif','font-sans'] 两种可选，分别是衬线和无衬线: 参考 https://www.jianshu.com/p/55e410bd2115
+  // ['font-serif','font-sans'] 两种可选，分别是衬线和无衬线: 参考 https://www.jianshu.com/p/55e410bd2115
+  // 后面空格隔开的font-light的字体粗细，留空是默认粗细；参考 https://www.tailwindcss.cn/docs/font-weight
+  FONT_STYLE: process.env.NEXT_PUBLIC_FONT_STYLE || 'font-sans font-light',
   // 字体CSS 例如 https://npm.elemecdn.com/lxgw-wenkai-webfont@1.6.0/style.css
   FONT_URL: [
     // 'https://npm.elemecdn.com/lxgw-wenkai-webfont@1.6.0/style.css',
@@ -96,6 +99,30 @@ const BLOG = {
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css', // font-awesome 字体图标地址; 可选 /css/all.min.css ， https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/font-awesome/6.0.0/css/all.min.css
 
   // END ************网站字体*****************
+
+  // 路径和组件映射，不同路径分别展示主题的什么组件
+  LAYOUT_MAPPINGS: {
+    '-1': 'LayoutBase',
+    '/': 'LayoutIndex',
+    '/archive': 'LayoutArchive',
+    '/page/[page]': 'LayoutPostList',
+    '/category/[category]': 'LayoutPostList',
+    '/category/[category]/page/[page]': 'LayoutPostList',
+    '/tag/[tag]': 'LayoutPostList',
+    '/tag/[tag]/page/[page]': 'LayoutPostList',
+    '/search': 'LayoutSearch',
+    '/search/[keyword]': 'LayoutSearch',
+    '/search/[keyword]/page/[page]': 'LayoutSearch',
+    '/404': 'Layout404',
+    '/tag': 'LayoutTagIndex',
+    '/category': 'LayoutCategoryIndex',
+    '/[prefix]': 'LayoutSlug',
+    '/[prefix]/[slug]': 'LayoutSlug',
+    '/[prefix]/[slug]/[...suffix]': 'LayoutSlug',
+    '/signin': 'LayoutSignIn',
+    '/signup': 'LayoutSignUp'
+  },
+
   CAN_COPY: process.env.NEXT_PUBLIC_CAN_COPY || true, // 是否允许复制页面内容 默认允许，如果设置为false、则全栈禁止复制内容。
   CUSTOM_RIGHT_CLICK_CONTEXT_MENU:
     process.env.NEXT_PUBLIC_CUSTOM_RIGHT_CLICK_CONTEXT_MENU || true, // 自定义右键菜单，覆盖系统菜单
@@ -172,10 +199,12 @@ const BLOG = {
 
   POST_LIST_STYLE: process.env.NEXT_PUBLIC_POST_LIST_STYLE || 'page', // ['page','scroll] 文章列表样式:页码分页、单页滚动加载
   POST_LIST_PREVIEW: process.env.NEXT_PUBLIC_POST_PREVIEW || 'false', //  是否在列表加载文章预览
-  POST_PREVIEW_LINES: 12, // 预览博客行数
-  POST_RECOMMEND_COUNT: 6, // 推荐文章数量
-  POSTS_PER_PAGE: 12, // post counts per page
+  POST_PREVIEW_LINES: process.env.NEXT_PUBLIC_POST_POST_PREVIEW_LINES || 12, // 预览博客行数
+  POST_RECOMMEND_COUNT: process.env.NEXT_PUBLIC_POST_RECOMMEND_COUNT || 6, // 推荐文章数量
+  POSTS_PER_PAGE: process.env.NEXT_PUBLIC_POST_PER_PAGE || 12, // post counts per page
   POSTS_SORT_BY: process.env.NEXT_PUBLIC_POST_SORT_BY || 'notion', // 排序方式 'date'按时间,'notion'由notion控制
+
+  POST_WAITING_TIME_FOR_404: process.env.NEXT_PUBLIC_POST_WAITING_TIME_FOR_404 || '8', // 文章加载超时时间，单位秒；超时后跳转到404页面
 
   ALGOLIA_APP_ID: process.env.NEXT_PUBLIC_ALGOLIA_APP_ID || null, // 在这里查看 https://dashboard.algolia.com/account/api-keys/
   ALGOLIA_ADMIN_APP_KEY: process.env.ALGOLIA_ADMIN_APP_KEY || null, // 管理后台的KEY，不要暴露在代码中，在这里查看 https://dashboard.algolia.com/account/api-keys/
@@ -194,12 +223,7 @@ const BLOG = {
   // 鼠标点击烟花特效
   FIREWORKS: process.env.NEXT_PUBLIC_FIREWORKS || false, // 开关
   // 烟花色彩，感谢 https://github.com/Vixcity 提交的色彩
-  FIREWORKS_COLOR: [
-    '255, 20, 97',
-    '24, 255, 146',
-    '90, 135, 255',
-    '251, 243, 140'
-  ],
+  FIREWORKS_COLOR: ['255, 20, 97', '24, 255, 146', '90, 135, 255', '251, 243, 140'],
 
   // 樱花飘落特效
   SAKURA: process.env.NEXT_PUBLIC_SAKURA || false, // 开关
@@ -454,7 +478,8 @@ const BLOG = {
     category: process.env.NEXT_PUBLIC_NOTION_PROPERTY_CATEGORY || 'category',
     date: process.env.NEXT_PUBLIC_NOTION_PROPERTY_DATE || 'date',
     tags: process.env.NEXT_PUBLIC_NOTION_PROPERTY_TAGS || 'tags',
-    icon: process.env.NEXT_PUBLIC_NOTION_PROPERTY_ICON || 'icon'
+    icon: process.env.NEXT_PUBLIC_NOTION_PROPERTY_ICON || 'icon',
+    ext: process.env.NEXT_PUBLIC_NOTION_PROPERTY_EXT || 'ext' // 扩展字段，存放json-string，用于复杂业务
   },
 
   // RSS订阅
@@ -477,6 +502,12 @@ const BLOG = {
   IMG_URL_TYPE: process.env.NEXT_PUBLIC_IMG_TYPE || 'Notion', // 此配置已失效，请勿使用；AMAZON方案不再支持，仅支持Notion方案。 ['Notion','AMAZON'] 站点图片前缀 默认 Notion:(https://notion.so/images/xx) ， AMAZON(https://s3.us-west-2.amazonaws.com/xxx)
   IMG_SHADOW: process.env.NEXT_PUBLIC_IMG_SHADOW || false, // 文章图片是否自动添加阴影
   IMG_COMPRESS_WIDTH: process.env.NEXT_PUBLIC_IMG_COMPRESS_WIDTH || 800, // Notion图片压缩宽度
+
+  // 作废配置
+  AVATAR: process.env.NEXT_PUBLIC_AVATAR || '/avatar.svg', // 作者头像，被notion中的ICON覆盖。若无ICON则取public目录下的avatar.png
+  TITLE: process.env.NEXT_PUBLIC_TITLE || 'NotionNext BLOG', // 站点标题 ，被notion中的页面标题覆盖；此处请勿留空白，否则服务器无法编译
+  HOME_BANNER_IMAGE: process.env.NEXT_PUBLIC_HOME_BANNER_IMAGE || '/bg_image.jpg', // 首页背景大图, 会被notion中的封面图覆盖，若无封面图则会使用代码中的 /public/bg_image.jpg 文件
+  DESCRIPTION: process.env.NEXT_PUBLIC_DESCRIPTION || '这是一个由NotionNext生成的站点', // 站点描述，被notion中的页面描述覆盖
 
   // 开发相关
   NOTION_ACCESS_TOKEN: process.env.NOTION_ACCESS_TOKEN || '', // Useful if you prefer not to make your database public
