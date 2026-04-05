@@ -1,54 +1,85 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+### Node
+# Dependencies
+node_modules/
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
+# Logs
+*.log
 
-# testing
-/coverage
+# Runtime data
+*.pid
+*.pid.lock
 
-# next.js
-/.next/
-/out/
+# Coverage
+coverage/
+*.lcov
+.nyc_output
 
-# production
-/build
+# Build output
+dist/
+build/Release
 
-# misc
-.DS_Store
-*.pem
+# TypeScript cache
+*.tsbuildinfo
 
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# Framework build output and caches
+.cache
+.parcel-cache
+.next
+out/
+.nuxt
 
-# local env files
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# dotenv environment variable files
 .env
+.env.local
+.env.*.local
 
-# vercel
-.vercel
+# npm cache directory
+.npm
+*.tgz
 
-# dev
-/data.json
-/pnpm-lock.yaml
-.idea
-.vscode
+# yarn v2
+.yarn/cache
+.yarn/unplugged
+.yarn/install-state.gz
+.pnp.*
 
+### Windows
+# Windows thumbnail cache files
+Thumbs.db
 
-# sitemap
-/public/robots.txt
-/public/sitemap.xml
-/public/rss/*
-/sitemap.xml
+# Folder config file
+[Dd]esktop.ini
 
-# yarn
-package-lock.json
-# yarn.lock
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
 
-.notion-api-lock
+# Windows shortcuts
+*.lnk
+
+### JetBrains
+# JetBrains IDE directory
+.idea/
+
+# CMake build directories
+cmake-build-*/
+
+# File-based project format
+*.iws
+*.iml
+
+# IntelliJ build output
+out/
+
+### VS Code
+# VSCode settings (keep shared configuration)
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Local History for Visual Studio Code
+.history/
+
+# Built Visual Studio Code Extensions
+*.vsix
