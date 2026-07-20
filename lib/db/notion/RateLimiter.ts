@@ -5,6 +5,8 @@ interface QueueItem<T> {
   requestFunc: () => Promise<T>
   resolve: (value: T) => void
   reject: (err: any) => void
+  key: string
+  retries: number
 }
 
 export class RateLimiter {
@@ -14,10 +16,13 @@ export class RateLimiter {
   private lastRequestTime = 0
   private requestCount = 0
   private windowStart = Date.now()
+  // 429错误时的全局暂停，避免并发重试
+  private globalPauseUntil = 0
 
   constructor(
-    private maxRequestsPerMinute = 200,
-    private lockFilePath?: string
+    private maxRequestsPerMinute = 60, // 降低到60请求/分钟，避免触发429
+    private lockFilePath?: string,
+    private maxRetries = 5 // 最大重试次数
   ) { }
 
   private async acquireLock() {
@@ -65,7 +70,7 @@ export class RateLimiter {
     }
 
     return new Promise((resolve, reject) => {
-      this.queue.push({ requestFunc, resolve, reject })
+      this.queue.push({ requestFunc, resolve, reject, key, retries: 0 })
       if (!this.isProcessing) this.processQueue()
     })
   }
@@ -76,23 +81,33 @@ export class RateLimiter {
 
     try {
       await this.acquireLock()
+
+      // 检查全局暂停（429错误后）
       const now = Date.now()
+      if (now < this.globalPauseUntil) {
+        const waitTime = this.globalPauseUntil - now
+        console.log(`[限流] 429后暂停中，等待 ${waitTime}ms`)
+        await new Promise(res => setTimeout(res, waitTime))
+      }
+
       const elapsed = now - this.windowStart
 
       if (elapsed > 60_000) { this.requestCount = 0; this.windowStart = now }
       if (this.requestCount >= this.maxRequestsPerMinute) {
         const waitTime = 60_000 - elapsed + 100
+        console.log(`[限流] 达到每分钟上限 ${this.maxRequestsPerMinute}，等待 ${waitTime}ms`)
         await new Promise(res => setTimeout(res, waitTime))
         this.requestCount = 0
         this.windowStart = Date.now()
       }
 
-      const minInterval = 300
-      const waitTime = Math.max(0, minInterval - (now - this.lastRequestTime))
-      if (waitTime > 0) await new Promise(res => setTimeout(res, waitTime))
+      // 增加最小请求间隔到800ms，降低请求频率
+      const minInterval = 800
+      const intervalWait = Math.max(0, minInterval - (now - this.lastRequestTime))
+      if (intervalWait > 0) await new Promise(res => setTimeout(res, intervalWait))
 
-      const { requestFunc, resolve, reject } = this.queue.shift()!
-      const key = crypto.randomUUID()
+      const item = this.queue.shift()!
+      const { requestFunc, resolve, reject, key, retries } = item
       this.inflight.add(key)
 
       try {
@@ -100,7 +115,24 @@ export class RateLimiter {
         this.lastRequestTime = Date.now()
         this.requestCount++
         resolve(result)
-      } catch (err) { reject(err) }
+      } catch (err: any) {
+        // 处理429错误，指数退避重试
+        if (err?.status === 429 || err?.message?.includes('429')) {
+          const retryDelay = Math.min(1000 * Math.pow(2, retries), 60000) // 指数退避，最大60秒
+          console.warn(`[限流] 收到429错误，第${retries + 1}次重试，等待${retryDelay}ms`)
+
+          if (retries < this.maxRetries) {
+            // 设置全局暂停，避免其他请求也触发429
+            this.globalPauseUntil = Date.now() + retryDelay
+
+            // 重新加入队列
+            this.queue.unshift({ ...item, retries: retries + 1 })
+            this.inflight.delete(key)
+            return
+          }
+        }
+        reject(err)
+      }
       finally { this.inflight.delete(key) }
 
     } catch (err) {
